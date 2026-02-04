@@ -1,5 +1,5 @@
 import './style.css'
-import { getIsLoggedIn, onLoginChange } from './fake-auth'
+import { getIsLoggedIn } from './fake-auth'
 
 import type { AIChatFormSettings, JSONSchema, ToolFunction, FormField, InkeepJS, InkeepComponentProps } from '@inkeep/cxkit-types';
 
@@ -77,8 +77,31 @@ const supportForm: AIChatFormSettings = {
     submit: {
       label: 'Create support ticket',
       onSubmit: async ({ values, conversation }) => {
+        console.log('values', values);
+        // values example:
+        //   {
+        //     "name": "Sarah",
+        //     "email": "sarah@inkeep.com",
+        //     "subscription": "subscription_1",
+        //     "include_chat_session": true,
+        //     "description": "Here is a description of my problem."
+        // }
+        console.log('conversation', conversation);
+        // conversation example:
+        // {
+        //   id: "conv_123",
+        //   type: "openai",
+        //   createdAt: "2026-02-04T19:31:18.810Z",
+        //   messages: [
+        //     { role: "user", content: "how to reset my password" },
+        //     { role: "assistant", content: "I don't have info about...", tool_calls: [...] }
+        //   ],
+        //   messagesOpenAIFormat: [
+        //     { role: "user", content: "how to reset my password" },
+        //     { role: "assistant", content: "...", tool_calls: [...] }
+        //   ]
+        // }
         try {
-          console.log(values);
           const payload = {
             conversation_id: conversation?.id,
             description: values?.description,
@@ -86,7 +109,15 @@ const supportForm: AIChatFormSettings = {
             name: values?.name,
             subscription: values?.subscription,
           };
-          console.log(payload);
+          console.log('payload', payload);
+          // payload example:
+          //   {
+          //     "conversation_id": "conv_123",
+          //     "description": "Here is a description of my problem.",
+          //     "email": "sarah@inkeep.com",
+          //     "name": "Sarah",
+          //     "subscription": "subscription_1"
+          // }
           // TODO: Replace with actual call to create the support ticket
           const response = await new Promise<{ ok: boolean }>((resolve) => {
             setTimeout(() => resolve({ ok: true }), 500);
@@ -121,16 +152,16 @@ const supportForm: AIChatFormSettings = {
       name: 'email',
     },
     {
-      inputType: 'textarea',
-      isRequired: true,
-      label: 'Description',
-      name: 'description',
-    },
-    {
       _type: 'include_chat_session',
       defaultValue: true,
       label: 'Include chat history',
       name: 'include_chat_session',
+    },
+    {
+      inputType: 'textarea',
+      isRequired: true,
+      label: 'Description',
+      name: 'description',
     },
   ],
   heading: 'Create support ticket',
@@ -151,17 +182,6 @@ const config: InkeepComponentProps = {
     primaryBrandColor: "#4F46E5",
   },
   aiChatSettings: {
-    // Optionally show the live chat button in the chat window
-    // getHelpOptions: [
-    //   {
-    //     action: {
-    //       formSettings: supportForm,
-    //       type: 'open_form',
-    //     },
-    //     icon: { builtIn: 'LuUsers' },
-    //     name: 'Open a support ticket',
-    //   },
-    // ],
     getTools: () => {
       return [
         {
@@ -177,7 +197,9 @@ const config: InkeepComponentProps = {
             // if the user is logged in, show the subscription dropdown
             // TODO: Replace with actual call to check if the user is logged in
             if (getIsLoggedIn()) {
-              fields.push(subscriptionField);
+              // insert the subscription dropdown after the email field
+              const emailIndex = fields.findIndex(f => f.name === 'email');
+              fields.splice(emailIndex + 1, 0, subscriptionField);
             }
             // if the answer confidence is not very confident, show a button that will open the support form to start a live chat
             if (['not_confident', 'no_sources', 'other'].includes(confidence)) {
@@ -203,45 +225,3 @@ const config: InkeepComponentProps = {
 };
 
 const chatButton = window.Inkeep?.ChatButton?.(config);
-
-
-// Example of how to update the chat button when the user logs in or out
-// onLoginChange((isLoggedIn) => {
-//   if (isLoggedIn) {
-//     console.log('user logged in');
-//     const fields = [...supportForm.fields];
-//     // add the subscription dropdown to the fields
-//     fields.push(subscriptionField);
-//     chatButton?.update({
-//       aiChatSettings: {
-//         getHelpOptions: [
-//           {
-//             action: {
-//               formSettings: { ...supportForm, fields },
-//               type: 'open_form',
-//             },
-//             icon: { builtIn: 'LuUsers' },
-//             name: 'Open a support ticket',
-//           },
-//         ],
-//       },
-
-//     });
-//   } else {
-//     console.log('user logged out');
-//     chatButton?.update({
-//       aiChatSettings: {
-//         getHelpOptions: [
-//           {
-//             action: {
-//               formSettings: supportForm,
-//               type: 'open_form',
-//             },
-//             icon: { builtIn: 'LuUsers' },
-//             name: 'Open a support ticket',
-//           },
-//         ],
-//       },
-//     });
-//   }
-// });
