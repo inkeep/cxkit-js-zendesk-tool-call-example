@@ -1,56 +1,13 @@
 import './style.css'
-import { getIsLoggedIn } from './fake-auth'
+import { onLoginChange } from './fake-auth'
 
-import type { AIChatFormSettings, JSONSchema, ToolFunction, FormField, InkeepJS, InkeepComponentProps } from '@inkeep/cxkit-types';
+import type { AIChatFormSettings, FormField, InkeepJS, InkeepComponentProps } from '@inkeep/cxkit-types';
 
 declare global {
   interface Window {
     Inkeep: InkeepJS;
   }
 }
-
-const escalationSchema: JSONSchema = {
-  additionalProperties: false,
-  description: 'Schema describing the answer confidence classification and its explanation.',
-  properties: {
-    answerConfidence: {
-      description: 'A measure of how confidently the AI Assistant completely and directly answered the User Question.',
-      oneOf: [
-        {
-          const: 'very_confident',
-          description:
-            'The AI Assistant provided a complete and direct answer to all parts of the User Question. The answer fully resolved the issue without requiring any further action from the User. Every part of the answer was cited from the information sources. The assistant did not ask for more information or provide options requiring User action. This is the highest Answer Confidence level and should be used sparingly.',
-        },
-        {
-          const: 'somewhat_confident',
-          description:
-            'The AI Assistant provided a complete and direct answer to the User Question, but the answer contained minor caveats or uncertainties. Examples include asking follow-up questions, requesting additional information, suggesting uncertainty, or mentioning potential exceptions.',
-        },
-        {
-          const: 'not_confident',
-          description:
-            'The AI Assistant tried to answer the User Question but did not fully resolve it. The assistant provided options requiring further action from the User, asked for more information, showed uncertainty, suggested contacting support, or provided an indirect or incomplete answer.',
-        },
-        {
-          const: 'no_sources',
-          description:
-            'The AI Assistant did not use or cite any sources from the information sources to answer the User Question.',
-        },
-        {
-          const: 'other',
-          description: 'The User Question is unclear or unrelated to the subject matter.',
-        },
-      ],
-      type: 'string',
-    },
-    explanation: {
-      description: 'A brief few word justification of why a specific confidence level was chosen.',
-      type: 'string',
-    },
-  },
-  required: ['answerConfidence', 'explanation'],
-  type: 'object',
-};
 
 const subscriptionField: FormField = {
   inputType: 'select',
@@ -183,46 +140,59 @@ const config: InkeepComponentProps = {
     primaryBrandColor: "#4F46E5",
   },
   aiChatSettings: {
-    getTools: () => {
-      return [
-        {
-          function: {
-            description: 'Determine how confident the AI assistant was and whether or not to escalate to humans.',
-            name: 'answerConfidence',
-
-            parameters: escalationSchema,
-          },
-          renderMessageButtons: ({ args }: { args: { answerConfidence: string } }) => {
-            const confidence = args?.answerConfidence;
-            const fields = [...supportForm.fields];
-            // if the user is logged in, show the subscription dropdown
-            // TODO: Replace with actual call to check if the user is logged in
-            if (getIsLoggedIn()) {
-              // insert the subscription dropdown after the email field
-              const emailIndex = fields.findIndex(f => f.name === 'email');
-              fields.splice(emailIndex + 1, 0, subscriptionField);
-            }
-            // if the answer confidence is not very confident, show a button that will open the support form to start a live chat
-            if (['not_confident', 'no_sources', 'other'].includes(confidence)) {
-              const action = {
-                action: {
-                  formSettings: { ...supportForm, fields },
-                  type: 'open_form',
-                },
-                icon: { builtIn: 'LuUsers' },
-                label: 'Open a support ticket',
-              } as const;
-
-              return [action];
-            }
-
-            return [];
-          },
-          type: 'function',
-        } as unknown as ToolFunction<{ answerConfidence: string }>,
-      ];
-    },
+    getHelpOptions: [
+      {
+        action: {
+          formSettings: supportForm,
+          type: 'open_form',
+        },
+        icon: { builtIn: 'LuUsers' },
+        name: 'Open a support ticket',
+      },
+    ],
   },
 };
 
 const chatButton = window.Inkeep?.ChatButton?.(config);
+
+
+onLoginChange((isLoggedIn) => {
+  if (isLoggedIn) {
+    console.log('user logged in');
+    const fields = [...supportForm.fields];
+    // insert the subscription dropdown after the email field
+    const emailIndex = fields.findIndex(f => f.name === 'email');
+    fields.splice(emailIndex + 1, 0, subscriptionField);
+    chatButton?.update({
+      aiChatSettings: {
+        getHelpOptions: [
+          {
+            action: {
+              formSettings: { ...supportForm, fields },
+              type: 'open_form',
+            },
+            icon: { builtIn: 'LuUsers' },
+            name: 'Open a support ticket',
+          },
+        ],
+      },
+
+    });
+  } else {
+    console.log('user logged out');
+    chatButton?.update({
+      aiChatSettings: {
+        getHelpOptions: [
+          {
+            action: {
+              formSettings: supportForm,
+              type: 'open_form',
+            },
+            icon: { builtIn: 'LuUsers' },
+            name: 'Open a support ticket',
+          },
+        ],
+      },
+    });
+  }
+});
