@@ -155,7 +155,7 @@ const config: InkeepComponentProps = {
 
 const chatButton = window.Inkeep?.ChatButton?.(config);
 
-
+// TODO: Replace with actual call to check if the user is logged in
 onLoginChange((isLoggedIn) => {
   if (isLoggedIn) {
     console.log('user logged in');
