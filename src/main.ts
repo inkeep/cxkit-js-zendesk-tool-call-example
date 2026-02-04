@@ -57,6 +57,7 @@ const subscriptionField: FormField = {
   isRequired: true,
   label: 'Subscription',
   name: 'subscription',
+  // TODO: Replace with actual subscriptions items
   items: [
     {
       label: 'Subscription 1',
