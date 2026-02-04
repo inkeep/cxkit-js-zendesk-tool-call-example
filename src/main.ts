@@ -1,5 +1,4 @@
 import './style.css'
-import { onLoginChange } from './fake-auth'
 
 import type { AIChatFormSettings, FormField, InkeepJS, InkeepComponentProps } from '@inkeep/cxkit-types';
 
@@ -8,24 +7,6 @@ declare global {
     Inkeep: InkeepJS;
   }
 }
-
-const subscriptionField: FormField = {
-  inputType: 'select',
-  isRequired: true,
-  label: 'Subscription',
-  name: 'subscription',
-  // TODO: Replace with actual subscription items
-  items: [
-    {
-      label: 'Subscription 1',
-      value: 'subscription_1',
-    },
-    {
-      label: 'Subscription 2',
-      value: 'subscription_2',
-    },
-  ],
-};
 
 const supportForm: AIChatFormSettings = {
   buttons: {
@@ -138,6 +119,9 @@ const config: InkeepComponentProps = {
     apiKey: import.meta.env.VITE_INKEEP_API_KEY,
     organizationDisplayName: "Your Company",
     primaryBrandColor: "#4F46E5",
+    userProperties: {
+
+    }
   },
   aiChatSettings: {
     getHelpOptions: [
@@ -155,44 +139,74 @@ const config: InkeepComponentProps = {
 
 const chatButton = window.Inkeep?.ChatButton?.(config);
 
-// TODO: Replace with actual call to check if the user is logged in
-onLoginChange((isLoggedIn) => {
-  if (isLoggedIn) {
-    console.log('user logged in');
-    const fields = [...supportForm.fields];
-    // insert the subscription dropdown after the email field
-    const emailIndex = fields.findIndex(f => f.name === 'email');
-    fields.splice(emailIndex + 1, 0, subscriptionField);
-    chatButton?.update({
-      aiChatSettings: {
-        getHelpOptions: [
-          {
-            action: {
-              formSettings: { ...supportForm, fields },
-              type: 'open_form',
-            },
-            icon: { builtIn: 'LuUsers' },
-            name: 'Open a support ticket',
-          },
-        ],
-      },
+// Simulated function to fetch user data including their subscriptions
+async function fetchUserData(userId: string) {
+  // TODO: Replace with actual API call
+  // const response = await fetch(`https://your-api.com/users/${userId}`);
+  // return response.json();
 
-    });
-  } else {
-    console.log('user logged out');
-    chatButton?.update({
-      aiChatSettings: {
-        getHelpOptions: [
-          {
-            action: {
-              formSettings: supportForm,
-              type: 'open_form',
-            },
-            icon: { builtIn: 'LuUsers' },
-            name: 'Open a support ticket',
-          },
+  // Simulated response
+  return new Promise<{
+    id: string;
+    name: string;
+    email: string;
+    subscriptions: Array<{ label: string; value: string }>;
+  }>((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: userId,
+        name: 'Sarah',
+        email: 'sarah@example.com',
+        subscriptions: [
+          { label: 'Pro Plan - Acme Corp', value: 'sub_abc123' },
+          { label: 'Enterprise - Beta Inc', value: 'sub_def456' },
         ],
+      });
+    }, 500);
+  });
+}
+
+// Example: Fetch user data and update the chat button
+async function initializeForUser(userId: string) {
+  const userData = await fetchUserData(userId);
+
+  // Build the subscription field with user's subscriptions
+  const subscriptionFieldWithItems: FormField = {
+    inputType: 'select',
+    isRequired: true,
+    label: 'Subscription',
+    name: 'subscription',
+    items: userData.subscriptions,
+  };
+
+  // Insert subscription field after email
+  const fields = [...supportForm.fields];
+  const emailIndex = fields.findIndex(f => f.name === 'email');
+  fields.splice(emailIndex + 1, 0, subscriptionFieldWithItems);
+
+  // Update chat button with user properties and customized form
+  chatButton?.update({
+    baseSettings: {
+      userProperties: {
+        userId: userData.id,
+        name: userData.name,
+        email: userData.email,
       },
-    });
-  }
-});
+    },
+    aiChatSettings: {
+      getHelpOptions: [
+        {
+          action: {
+            formSettings: { ...supportForm, fields },
+            type: 'open_form',
+          },
+          icon: { builtIn: 'LuUsers' },
+          name: 'Open a support ticket',
+        },
+      ],
+    },
+  });
+}
+
+// Simulate initializing for a logged-in user
+initializeForUser('user_123');
