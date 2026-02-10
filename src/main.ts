@@ -58,8 +58,8 @@ const supportForm: AIChatFormSettings = {
           //     "subscription": "subscription_1"
           // }
           // TODO: Replace with actual call to create the support ticket
-          const response = await new Promise<{ ok: boolean }>((resolve) => {
-            setTimeout(() => resolve({ ok: true }), 500);
+          const response = await new Promise<{ ok: boolean; ticket_id?: string }>((resolve) => {
+            setTimeout(() => resolve({ ok: true, ticket_id: 'TKT-' + Math.random().toString(36).slice(2, 10).toUpperCase() }), 500);
           });
           // here is an example of an API call to create a support ticket
           // const response = await fetch('https://your-api-endpoint.com/create-support-ticket', {
@@ -68,6 +68,10 @@ const supportForm: AIChatFormSettings = {
           // });
           if (!response.ok) {
             throw new Error('Failed to create support ticket');
+          }
+          // Update success view to show the ticket ID
+          if (response.ticket_id && supportForm.successView) {
+            supportForm.successView.message = `We'll get back to you shortly. Your ticket ID is: ${response.ticket_id}, here is a [link](https://inkeep.com)`;
           }
         } catch (error) {
           console.error('Failed to create support ticket', error);
