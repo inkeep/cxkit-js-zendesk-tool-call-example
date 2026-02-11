@@ -91,6 +91,22 @@ const supportForm: AIChatFormSettings = {
       name: 'email',
     },
     {
+      label: 'Tags',
+      name: 'tags',
+      inputType: 'combobox',
+      isRequired: true,
+      items: [
+        { label: 'Documentation', value: 'DOCS' },
+        { label: 'Billing', value: 'BILLING' },
+        { label: 'Integration', value: 'INTEGRATION' },
+        { label: 'API', value: 'API' },
+        { label: 'SDK', value: 'SDK' },
+        { label: 'Authentication', value: 'AUTH' },
+      ],
+      placeholder: 'Search or select tags',
+      multiple: true,
+    },
+    {
       _type: 'include_chat_session',
       defaultValue: true,
       label: 'Include chat history',

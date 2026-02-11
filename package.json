@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@inkeep/cxkit-types": "^0.5.113",
+    "@inkeep/cxkit-types": "^0.5.115",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   }
