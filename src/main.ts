@@ -8,10 +8,16 @@ declare global {
   }
 }
 
+// const styles = `
+// .ikp-modal__content {
+//   width: 1000px;
+//   height: 300px;
+// }`
+
 const supportForm: AIChatFormSettings = {
   buttons: {
     close: {
-      action: 'return_to_chat',
+      action: 'close_modal',
     },
     submit: {
       label: 'Create support ticket',
@@ -87,17 +93,20 @@ const supportForm: AIChatFormSettings = {
       isRequired: true,
       label: 'Name',
       name: 'name',
+      description: 'Your name',
     },
     {
       inputType: 'email',
       isRequired: true,
       label: 'Email',
       name: 'email',
+      description: 'Your email',
     },
     {
       label: 'Tags',
       name: 'tags',
       inputType: 'combobox',
+      description: 'Tags',
       isRequired: true,
       items: [
         { label: 'Documentation', value: 'DOCS' },
@@ -121,6 +130,7 @@ const supportForm: AIChatFormSettings = {
       isRequired: true,
       label: 'Description',
       name: 'description',
+      description: 'Description of your problem',
     },
   ],
   heading: 'Create support ticket',
@@ -139,8 +149,16 @@ const config: InkeepComponentProps = {
     apiKey: import.meta.env.VITE_INKEEP_API_KEY,
     organizationDisplayName: "Your Company",
     primaryBrandColor: "#4F46E5",
+    theme: {
+      // styles: [
+      //   {
+      //     type: 'style',
+      //     value: styles,
+      //     key: 'customStyles',
+      //   },
+      // ],
+    },
     userProperties: {
-
     }
   },
   aiChatSettings: {
@@ -207,6 +225,7 @@ async function initializeForUser(userId: string) {
   // Update chat button with user properties and customized form
   chatButton?.update({
     baseSettings: {
+
       userProperties: {
         userId: userData.id,
         name: userData.name,
